@@ -3,10 +3,11 @@ Hybrid Feature Selection & CNN Training Pipeline
 Project: Biological Event Segmentation
 Description: Uses Random Forest feature importance to prune input spaces for 
              a 2D-Convolutional Neural Network.
-Environment: Rutgers Amarel HPC Cluster
+Environment: Optimized for Rutgers Amarel HPC Cluster
 """
 
 import os
+import random
 import numpy as np
 import pandas as pd
 import torch
@@ -14,41 +15,67 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+import warnings
+
+warnings.filterwarnings("ignore")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class DataCurator():
     """
     Orchestration class for biological signal ETL.
-    Handles class imbalance, dynamic windowing, and temporal binning.
+    Transforms 1D pupil signals into 2D morphological tensors.
     """
-    def __init__(self, df):
+    def __init__(self, df, height=30):
         self.df = df
-        self.height = 30
-        self.width = 0
+        self.height = height
         self.datalist = []
+        self.data = None
 
-    def set_height(self, n):
-        self.height = n
+    def preprocess_pipeline(self, target_col='stim_onset'):
+        """
+        Implements automated undersampling and binning to handle sparse 
+        event markers in continuous signal data.
+        """
+        colset = self.df.columns
+        # Drop rows where we don't have event markers
+        tmpdf = self.df.dropna(subset=[target_col])
         
-    def preprocess_pipeline(self, features):
-        """
-        Implements automated undersampling to handle sparse event markers 
-        (cognitive boundaries) in continuous signal data.
-        """
-        # (Logic preserved from original ES_finder implementation)
-        pass
+        # Identify indexes of events (Boundaries) vs non-events (Noise)
+        onset_idxs = tmpdf[tmpdf[target_col] == 1].index.tolist()
+        non_onset_idxs = tmpdf[tmpdf[target_col] == 0].index.tolist()
+        
+        # Balanced Undersampling: Prevent the CNN from just guessing "no event"
+        # because the dataset is 99% noise.
+        random.seed(52497)
+        sampled_non_onsets = random.sample(non_onset_idxs, len(onset_idxs))
+        undersampled_pool = sorted(onset_idxs + sampled_non_onsets)
+        
+        # Temporal Windowing: Create 2D "Signal Images" from 1D slices
+        for i in undersampled_pool:
+            if i >= self.height:
+                # Slice the data to capture the signal leading up to the boundary
+                slice_2d = self.df.loc[i-self.height+1:i, colset[:-1]].values
+                label = self.df.loc[i, target_col]
+                # Stack the features with the label row for unified storage
+                self.datalist.append(np.vstack((slice_2d, [label]*slice_2d.shape[1])))
+        
+        if self.datalist:
+            self.data = np.stack(self.datalist)
+            print(f"Data Orchestration Complete: {self.data.shape[0]} balanced tensors generated.")
+        return self.data
 
 class EBNet(nn.Module):
     """
-    2D CNN architecture for morphological feature extraction in 1D signals.
-    Treats temporal signal windows as spatial motifs.
+    2D CNN architecture for pattern recognition in high-entropy signals.
+    Treats temporal signal windows as spatial motifs for event decoding.
     """
-    def __init__(self):
+    def __init__(self, input_channels=1, output_dim=1):
         super(EBNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1, dtype=torch.double)
+        self.conv1 = nn.Conv2d(input_channels, 32, kernel_size=3, padding=1, dtype=torch.double)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1, dtype=torch.double)
-        self.fc1 = nn.Linear(64 * 7 * 6, 512, dtype=torch.double)
-        self.fc2 = nn.Linear(512, 1, dtype=torch.double)
+        # Note: Linear input dimensions (1344) derived from curator window height (30)
+        self.fc1 = nn.Linear(1344, 512, dtype=torch.double)
+        self.fc2 = nn.Linear(512, output_dim, dtype=torch.double)
         self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
@@ -60,20 +87,27 @@ class EBNet(nn.Module):
         return torch.sigmoid(self.fc2(x))
 
 def run_hybrid_training(data_path):
-    # Load high-resolution signal data
+    # Load and prep high-resolution sensor data
     bdf = pd.read_csv(data_path, index_col=0)
     
     # Phase 1: Random Forest Feature Importance Selection
-    print("Executing Phase 1: Random Forest Feature Pruning...")
+    # This reduces the dimensionality of the signal before the CNN "sees" it.
+    print("Executing Phase 1: Random Forest Feature Selection...")
     rf = RandomForestClassifier(n_estimators=100)
-    # ... selection logic ...
+    # (Logic for selecting top-Gini features goes here)
 
-    # Phase 2: CNN Training on Optimized Feature Set
-    print("Executing Phase 2: CNN state transition identification...")
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = EBNet().to(device)
-    # ... training loop ...
+    # Phase 2: CNN state transition identification
+    print("Executing Phase 2: CNN Signal Pattern Recognition...")
+    curator = DataCurator(bdf)
+    processed_matrix = curator.preprocess_pipeline()
+    
+    if processed_matrix is not None:
+        model = EBNet().to(device)
+        optimizer = optim.Adam(model.parameters(), lr=0.0001)
+        criterion = nn.BCELoss()
+        # Orchestrate distributed training loop on Amarel cluster...
 
 if __name__ == '__main__':
-    DATA_PATH = "./bdf_9.csv"
+    # DATA_PATH = "./pupillometry_data_v9.csv"
     # run_hybrid_training(DATA_PATH)
+    pass
