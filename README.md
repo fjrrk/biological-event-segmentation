@@ -1,43 +1,40 @@
-Biological Event Segmentation Engine
+# **biological-event-segmentation: Deep Learning for Neural Event Decoding**
 
-Overview
-	This repository contains a custom deep-learning framework designed to decode psychological "Event Boundaries" from high-entropy biological signals (Pupillometry). Unlike standard time-series models, this engine utilizes a 2D Convolutional Neural Network (CNN) architecture to capture complex temporal dependencies and morphological features within sensory data.
+## **Overview**
 
-Core Engineering Highlights
+This repository contains a specialized deep learning framework developed to identify event boundaries in high-dimensional biological signals (Pupillometry and BOLD time-series).
 
-	1. Architectural Innovation (EBNet)
+The project utilizes a hybrid approach—combining classical statistical feature selection with modern convolutional architectures—to decode the morphological signatures of cognitive state shifts.
 
-		Custom CNN Design: Developed a modular PyTorch-based CNN that treats multi-channel signal windows as 2D tensors, enabling the extraction of spatial-temporal motifs associated with cognitive state transitions.
+## **Core Engineering Highlights**
 
-		Hybrid Feature Selection: Integrated Random Forest-based feature importance analysis to prune high-dimensional input spaces, reducing model latency and improving signal-to-noise ratios before neural network ingestion.
+### **Bayesian Hyperparameter Optimization**
 
-	2. High-Fidelity Data Orchestration (DataCurator)
+* **Automated Architecture Search:** Utilized Optuna to execute a Bayesian search across a high-dimensional parameter space, identifying optimal filter counts, kernel sizes, and dropout rates for the EBNet architecture.  
+* **HPC Execution:** Scaled optimization trials across the Rutgers Amarel HPC Cluster using automated pruning logic to maximize computational efficiency.
 
-		A central component of this project is the custom DataCurator class, which automates the high-stakes ETL required for biological data:
+### **Hybrid Feature Selection (Gini-CNN)**
 
-		Dynamic Temporal Windowing: Implements flexible "look-back" heights to capture varied signal dynamics.
+* **Dimensionality Reduction:** Implemented a Random Forest-based Gini Importance wrapper to prune messy biological input leads, isolating the top 6 most informative features before neural network ingestion.  
+* **Morphological Tensorization:** Developed a custom DataCurator class to transform 1D time-series into balanced 2D windowed tensors, allowing the CNN to extract spatial-temporal motifs.
 
-		Automated Undersampling: Specifically engineered to handle extreme class imbalances common in event-marking datasets.
+### **Architecture: EBNet**
 
-		Stationarity Rigor: Includes preprocessing pipelines for non-linear PLR (Pupillary Light Response) attenuation using Loess smoothing and GMM-based signal deconvolution.
+* **Custom CNN Pipeline:** Designed a multi-stage 2D-CNN optimized for low-sample biological data.  
+* **Convergence Stability:** Integrated He Initialization and dynamic padding calculators to ensure architectural stability during automated search trials.
 
-	3. Bayesian Hyperparameter Optimization
+## **Infrastructure**
 
-		Automated Tuning: Utilized Optuna to implement a multi-trial Bayesian search space for model optimization.
+* **Amarel HPC Cluster:** Optimized for CUDA-accelerated training and high-throughput hyperparameter search.
 
-		Pruning Logic: Incorporated automated trial pruning to efficiently navigate the architecture space, determining the optimal number of convolutional filters, dropout rates, and linear layer depths.
+## **Repository Structure**
 
-Infrastructure & Scalability
+* **/src**: Core Python components including the Bayesian optimizer and the hybrid trainer.  
+* **/notebooks**: Iterative development history and architectural proof-of-concepts.  
+* **/archive**: Legacy research scratchpads and initial data exploration.
 
-	Rutgers Amarel HPC Integration: Large-scale 4D tensor processing and parallelized optimization trials were offloaded to the Rutgers Amarel Scientific Computing Cluster.
+## **Tech Stack**
 
-	HPC Orchestration: Architected training loops using Python’s multiprocessing and concurrent.futures to leverage multi-node CPU/GPU resources, enabling the processing of datasets that exceeded local memory constraints.
-
-Tech Stack
-	Deep Learning: PyTorch, TorchVision.
-	Optimization: Optuna.
-	Signal Processing: SciPy, Ruptures (PELT), R (Mclust, Tidyverse).
-	Data Engineering: Python Multiprocessing, FFmpeg/FFprobe automation.
-
-Project Evolution
-	The code in src/ represents the culmination of iterative "research spikes" found in the archive/ folder, ranging from initial signal detection logic to the final optimized hybrid-modeling pipeline.
+* **Frameworks:** PyTorch, Optuna, Scikit-learn  
+* **Libraries:** NumPy, Pandas, Matplotlib  
+* **Mathematics:** Bayesian Optimization, Gini Importance, Convolutional Morphological Analysis
