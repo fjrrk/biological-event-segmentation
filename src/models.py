@@ -11,74 +11,58 @@ import torch.nn.functional as F
 EBNet: Spatio-Temporal Convolutional Neural Network
 Project: Event-Boundary Detection / Event Cognition
 Description: 2D-CNN architecture designed to identify event boundaries in 
-             biological manifolds (Gaze/Pupil coordinates). Optimized for 
-             low-latency inference on non-stationary time-series.
+             biological sensor manifolds. Optimized for morphological pattern 
+             recognition in non-stationary time-series.
 """
 
-# Version 1.0.Refactored from EBNet.ipynb and legacy ES_finder scripts.
-#             Standardized kernel dimensions for (Features x Time) manifolds.
+# Version 1.3. Standardized on torch.float32 for HPC efficiency.
+#             Refactored kernel dimensions for explicit temporal-to-spatial fusion.
 
 
 class EBNet(nn.Module):
     """
-    Convolutional Neural Network for biological event segmentation.
-    Uses a 2D approach to capture dependencies between sensor channels 
-    and temporal dynamics simultaneously.
+    CNN architecture designed to capture patterns in biological signal windows.
     """
 
-    def __init__(self, input_channels=1, num_features=3, window_height=30):
+    def __init__(self, num_features=6, window_height=30):
         super(EBNet, self).__init__()
         
-        # Layer 1: Captures local temporal patterns within sensor channels
-        self.conv1 = nn.Conv2d(
-            in_channels=input_channels, 
-            out_channels=16, 
-            kernel_size=(1, 5), 
-            padding=(0, 2)
-        )
+        # Block 1: Temporal pattern detection (Kernel: 1 feature x 5 time-steps)
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=(1, 5), padding=(0, 2))
         
-        # Layer 2: Integrates across sensor channels (Spatio-Temporal Fusion)
-        self.conv2 = nn.Conv2d(
-            in_channels=16, 
-            out_channels=32, 
-            kernel_size=(num_features, 3), 
-            padding=(0, 1)
-        )
+        # Block 2: Cross-feature integration (Kernel: all features x 3 time-steps)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=(num_features, 3), padding=(0, 1))
         
         self.pool = nn.MaxPool2d(kernel_size=(1, 2), stride=(1, 2))
         
-        # Dynamic calculation of linear input size based on window height
-        # Post-conv1: Height remains 30
-        # Post-pool1: Height becomes 15
-        # Post-conv2: Height remains 15 (Features reduced to 1)
-        self.flatten_dim = 32 * 1 * (window_height // 2)
+        # Automated flatten dimension calculation (replaces legacy hardcoded 1344)
+        # Sequence: [30 height] -> [pool 15] -> [conv2 15]
+        self.flatten_dim = 64 * 1 * (window_height // 2)
         
-        self.fc1 = nn.Linear(self.flatten_dim, 64)
-        self.fc2 = nn.Linear(64, 1)
+        self.fc1 = nn.Linear(self.flatten_dim, 512)
+        self.fc2 = nn.Linear(512, 1)
         
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
         """
         Input shape: (Batch, 1, Features, Time)
         """
-        # First block: Temporal feature extraction
+        # Block 1: Local temporal features
         x = F.relu(self.conv1(x))
         x = self.pool(x)
         
-        # Second block: Cross-feature integration
+        # Block 2: Spatial (Feature) integration
         x = F.relu(self.conv2(x))
         
-        # Flatten and Classify
-        x = x.view(-1, self.flatten_dim)
-        x = self.dropout(F.relu(self.fc1(x)))
-        x = torch.sigmoid(self.fc2(x))
+        # Block 3: Classification
+        x = torch.flatten(x, 1)
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
         
-        return x
+        return torch.sigmoid(self.fc2(x))
 
 
 if __name__ == "__main__":
-    # Example model instantiation
-    # model = EBNet(num_features=3, window_height=30)
-    # print(model)
+    # model = EBNet(num_features=6, window_height=30)
     pass
