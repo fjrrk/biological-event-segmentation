@@ -22,10 +22,8 @@ Description: Bayesian optimization framework for identifying high-performance
 """
 
 # Version 1.2.Optimized for high-throughput cluster execution.
-#             Refactored from legacy optimizer.py.
 
 warnings.filterwarnings("ignore")
-
 
 def objective(trial, train_loader, val_loader):
     """
