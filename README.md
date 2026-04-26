@@ -1,40 +1,34 @@
-# **biological-event-segmentation: Deep Learning for Neural Event Decoding**
+# **README: Biological Event Segmentation (The Decoder)**
 
-## **Overview**
+## **Project Scope**
 
-This repository contains a specialized deep learning framework developed to identify event boundaries in high-dimensional biological signals (Pupillometry and BOLD time-series).
+This repository contains the Machine Learning research components for identifying cognitive event boundaries in biological time-series. It documents the development of **EBNet**, a 2D-CNN-based decoder, and the optimization framework used to identify its architectural parameters.
 
-The project utilizes a hybrid approach—combining classical statistical feature selection with modern convolutional architectures—to decode the morphological signatures of cognitive state shifts.
+## **Content Description**
 
-## **Core Engineering Highlights**
+### **1\. Model Architecture and Optimization (/src)**
 
-### **Bayesian Hyperparameter Optimization**
+* **models.py**: Defines the **EBNet** architecture. This 2D-CNN is designed to perform spatio-temporal fusion, collapsing feature dimensions to identify morphological motifs in gaze and pupillary manifolds.  
+* **hybrid\_trainer.py**: Implements a two-phase training pipeline:  
+  * *Phase 1 (Feature Pruning)*: Uses Random Forest Gini Importance to isolate the most informative biological signals.  
+  * *Phase 2 (Classification)*: Trains the CNN on 2D windowed tensors.  
+* **optimizer.py**: A Bayesian optimization framework using **Optuna**. This script was used to conduct a multi-variate search for optimal kernel sizes, dropout rates, and layer depths.  
+* **\_\_init\_\_.py**: Exposes the core classes for package-level integration.
 
-* **Automated Architecture Search:** Utilized Optuna to execute a Bayesian search across a high-dimensional parameter space, identifying optimal filter counts, kernel sizes, and dropout rates for the EBNet architecture.  
-* **HPC Execution:** Scaled optimization trials across the Rutgers Amarel HPC Cluster using automated pruning logic to maximize computational efficiency.
+### **2\. Research Evidence (/notebooks)**
 
-### **Hybrid Feature Selection (Gini-CNN)**
+* **model\_architecture\_v1.ipynb**: Benchmarking and exploratory development of the CNN layers.  
+* **Custom\_Dataset\_Creation.ipynb**: Records the methodology for class-balancing (475:475) to mitigate the high-entropy nature of event boundaries.  
+* **RF\_feature\_extractor.ipynb**: Initial validation of the Random Forest importance metrics used in the hybrid pipeline.
 
-* **Dimensionality Reduction:** Implemented a Random Forest-based Gini Importance wrapper to prune messy biological input leads, isolating the top 6 most informative features before neural network ingestion.  
-* **Morphological Tensorization:** Developed a custom DataCurator class to transform 1D time-series into balanced 2D windowed tensors, allowing the CNN to extract spatial-temporal motifs.
+### **3\. Legacy Prototypes (/archive)**
 
-### **Architecture: EBNet**
+* **Optuna\_testing-2.py through \-9.py**: Chronological record of the hyperparameter search iterations conducted on high-performance clusters.  
+* **ES\_finder\_\*.py**: Early drafts of the boundary detection logic.  
+* **Gaze\_Features.ipynb**: Exploratory coordinate mapping.
 
-* **Custom CNN Pipeline:** Designed a multi-stage 2D-CNN optimized for low-sample biological data.  
-* **Convergence Stability:** Integrated He Initialization and dynamic padding calculators to ensure architectural stability during automated search trials.
+## **Environment Specifications**
 
-## **Infrastructure**
-
-* **Amarel HPC Cluster:** Optimized for CUDA-accelerated training and high-throughput hyperparameter search.
-
-## **Repository Structure**
-
-* **/src**: Core Python components including the Bayesian optimizer and the hybrid trainer.  
-* **/notebooks**: Iterative development history and architectural proof-of-concepts.  
-* **/archive**: Legacy research scratchpads and initial data exploration.
-
-## **Tech Stack**
-
-* **Frameworks:** PyTorch, Optuna, Scikit-learn  
-* **Libraries:** NumPy, Pandas, Matplotlib  
-* **Mathematics:** Bayesian Optimization, Gini Importance, Convolutional Morphological Analysis
+* **Hardware Target:** High-Performance Computing (HPC) / SLURM-managed Cluster.  
+* **Accelerators:** NVIDIA CUDA-enabled GPUs.  
+* **Core Libraries:** PyTorch, Optuna, Scikit-learn.
