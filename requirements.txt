@@ -1,0 +1,1 @@
+Core Numerical and Data Analysisnumpy>=1.21.0pandas>=1.3.0Machine Learning and Optimizationscikit-learn>=1.0.0optuna>=2.10.0Deep Learning and Tensorstorch>=1.10.0torchvision>=0.11.0Dependencies for Data Loadingh5py>=3.6.0
