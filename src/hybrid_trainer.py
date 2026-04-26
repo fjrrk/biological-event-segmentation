@@ -22,8 +22,9 @@ Description: Two-phase research pipeline utilizing Random Forest Gini
              classification.
 """
 
-# Version 1.1.Integrated Gini Importance pruning logic.
+# Version 1.2.Integrated Gini Importance pruning logic.
 #             Removed hard-coded parameters.
+#             Refactored in part from formatrix.py
 
 warnings.filterwarnings("ignore")
 
