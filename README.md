@@ -1,34 +1,37 @@
-# **README: Biological Event Segmentation (The Decoder)**
+# Event Cognition / Pupillometry — Event-Boundary Modeling Archive
 
-## **Project Scope**
+This repository preserves one modeling branch from a broader graduate research program on event cognition and pupillometry. It is an **exploratory research archive**, not a standalone production system.
 
-This repository contains the Machine Learning research components for identifying cognitive event boundaries in biological time-series. It documents the development of **EBNet**, a 2D-CNN-based decoder, and the optimization framework used to identify its architectural parameters.
+## Research context
 
-## **Content Description**
+The broader project asked whether event boundaries in naturalistic experience could be related to measurable structure in physiological and behavioral time series. This repository contains attempts to model that problem using pupil/gaze-derived features and machine-learning methods.
 
-### **1\. Model Architecture and Optimization (/src)**
+The surviving materials include work involving:
 
-* **models.py**: Defines the **EBNet** architecture. This 2D-CNN is designed to perform spatio-temporal fusion, collapsing feature dimensions to identify morphological motifs in gaze and pupillary manifolds.  
-* **hybrid\_trainer.py**: Implements a two-phase training pipeline:  
-  * *Phase 1 (Feature Pruning)*: Uses Random Forest Gini Importance to isolate the most informative biological signals.  
-  * *Phase 2 (Classification)*: Trains the CNN on 2D windowed tensors.  
-* **optimizer.py**: A Bayesian optimization framework using **Optuna**. This script was used to conduct a multi-variate search for optimal kernel sizes, dropout rates, and layer depths.  
-* **\_\_init\_\_.py**: Exposes the core classes for package-level integration.
+- PyTorch/CNN model prototypes
+- Random Forest feature-selection experiments
+- windowed/custom dataset construction
+- automated architecture and hyperparameter search with Optuna
+- exploratory event-boundary detection scripts
+- model-development notebooks and execution logs
 
-### **2\. Research Evidence (/notebooks)**
+Automated architecture/hyperparameter search was run during the original research process, including work in the Rutgers Amarel HPC environment. The archive is preserved as evidence of that exploratory modeling process rather than as a claim of a validated production model.
 
-* **model\_architecture\_v1.ipynb**: Benchmarking and exploratory development of the CNN layers.  
-* **Custom\_Dataset\_Creation.ipynb**: Records the methodology for class-balancing (475:475) to mitigate the high-entropy nature of event boundaries.  
-* **RF\_feature\_extractor.ipynb**: Initial validation of the Random Forest importance metrics used in the hybrid pipeline.
+## Relationship to the rest of the research program
 
-### **3\. Legacy Prototypes (/archive)**
+This repository should be read together with **[sensor-signal-orchestration-archive](https://github.com/fjrrk/sensor-signal-orchestration-archive)**, which preserves data-cleaning, alignment, and signal-processing work from the same Event Cognition / pupillometry research system.
 
-* **Optuna\_testing-2.py through \-9.py**: Chronological record of the hyperparameter search iterations conducted on high-performance clusters.  
-* **ES\_finder\_\*.py**: Early drafts of the boundary detection logic.  
-* **Gaze\_Features.ipynb**: Exploratory coordinate mapping.
+The split between repositories is organizational: these were interconnected parts of one scientific investigation, not independent software products.
 
-## **Environment Specifications**
+## Interpretation and limitations
 
-* **Hardware Target:** High-Performance Computing (HPC) / SLURM-managed Cluster.  
-* **Accelerators:** NVIDIA CUDA-enabled GPUs.  
-* **Core Libraries:** PyTorch, Optuna, Scikit-learn.
+The work here reflects rapid method search around a difficult scientific question: whether a reliable event-boundary signal could be extracted from noisy biological and behavioral data.
+
+No claim is made here of:
+
+- production deployment
+- clinical validation
+- benchmark-level model performance
+- a finalized event-boundary classifier
+
+The value of the archive is methodological and historical: it records the modeling approaches explored, the quantitative tools used, and the evolution of the research question.
